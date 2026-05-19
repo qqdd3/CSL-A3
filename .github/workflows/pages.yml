@@ -30,9 +30,8 @@ jobs:
             exit 1
           fi
           mkdir -p _site
-          cp -r . _site/
-          rm -rf _site/.git _site/.github
-          python3 -c "import os,sys; p='_site/index.html'; s=open(p).read().replace('__ANTHROPIC_API_KEY__', os.environ['ANTHROPIC_API_KEY']); open(p,'w').write(s)"
+          cp index.html _site/index.html
+          python3 -c "import os; p='_site/index.html'; s=open(p).read().replace('__ANTHROPIC_API_KEY__', os.environ['ANTHROPIC_API_KEY']); open(p,'w').write(s)"
 
       - uses: actions/upload-pages-artifact@v3
         with:
