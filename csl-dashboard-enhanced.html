@@ -1,0 +1,2298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSL Donor Sentiment Intelligence Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f1f5f9;
+            min-height: 100vh;
+            padding: 32px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 2px solid rgba(148, 163, 184, 0.2);
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #b91c1c 0%, #ef4444 100%);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 10px 20px rgba(239, 68, 68, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .logo svg {
+            width: 32px;
+            height: 32px;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        }
+
+        .logo-mark {
+            position: absolute;
+            bottom: 4px;
+            right: 6px;
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Icon utility — inherits color, scales with font-size */
+        .icon {
+            width: 1em;
+            height: 1em;
+            vertical-align: -0.15em;
+            flex-shrink: 0;
+            stroke-width: 2;
+        }
+
+        h2 .icon, h3 .icon {
+            color: #93c5fd;
+            margin-right: 4px;
+        }
+
+        /* Live status pill */
+        .live-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #86efac;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6);
+            animation: pulse 2s ease-out infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6); }
+            70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .header-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 12px;
+        }
+
+        .title-section h1 {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #f1f5f9 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        .title-section p {
+            color: #94a3b8;
+            font-size: 14px;
+            margin-top: 6px;
+            font-weight: 500;
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.5);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+        }
+
+        /* Assign Task Button */
+        .assign-task-btn {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .assign-task-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.5);
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        }
+
+        /* Task Assignment Modal */
+        .task-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 10000;
+            padding: 20px;
+            overflow-y: auto;
+            backdrop-filter: blur(8px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .task-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .task-modal-content {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border-radius: 18px;
+            padding: 40px;
+            max-width: 700px;
+            width: 100%;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+            animation: slideUp 0.4s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .task-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .task-modal-header h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .task-close-btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 28px;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .task-close-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .task-form-group {
+            margin-bottom: 24px;
+        }
+
+        .task-form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .task-form-group select,
+        .task-form-group input,
+        .task-form-group textarea {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            border-radius: 10px;
+            padding: 14px;
+            color: #f1f5f9;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .task-form-group select:focus,
+        .task-form-group input:focus,
+        .task-form-group textarea:focus {
+            outline: none;
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        }
+
+        .task-form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .task-submit-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .task-submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+        }
+
+        .task-info-box {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .task-info-box h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #93c5fd;
+            margin-bottom: 8px;
+        }
+
+        .task-info-box p {
+            font-size: 13px;
+            color: #cbd5e1;
+            margin: 4px 0;
+        }
+
+        /* Analyzer Panel */
+        .analyzer-panel {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border-radius: 18px;
+            padding: 36px;
+            margin-bottom: 32px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+            display: none;
+            animation: slideDown 0.4s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .analyzer-panel.active {
+            display: block;
+        }
+
+        .analyzer-panel h2 {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .form-grid-two {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 10px;
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-group select,
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            background: #0f172a;
+            color: #f1f5f9;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .form-group select:focus,
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-group textarea {
+            min-height: 140px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .analysis-result {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(59, 130, 246, 0.05) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 24px;
+            display: none;
+        }
+
+        .analysis-result.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .analysis-result h3 {
+            font-size: 17px;
+            color: #93c5fd;
+            margin-bottom: 18px;
+            font-weight: 600;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: 160px 120px minmax(0, 1fr);
+            gap: 20px;
+            align-items: start;
+        }
+
+        @media (max-width: 768px) {
+            .result-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .reasoning {
+                grid-column: 1 / -1;
+            }
+        }
+
+        .result-item {
+            text-align: center;
+            padding: 16px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 10px;
+        }
+
+        .result-label {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .result-value {
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .result-value.positive { color: #10b981; }
+        .result-value.negative { color: #ef4444; }
+        .result-value.neutral { color: #f59e0b; }
+
+        .reasoning {
+            text-align: left;
+            padding: 16px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 10px;
+        }
+
+        .reasoning .result-value {
+            font-size: 14px;
+            font-weight: 400;
+            color: #cbd5e1;
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 16px 36px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+        }
+
+        .submit-btn:disabled {
+            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* Metrics Cards */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+            margin-bottom: 36px;
+        }
+
+        .metric-card {
+            border-radius: 18px;
+            padding: 28px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.5);
+        }
+
+        .metric-card.primary {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        }
+
+        .metric-card.success {
+            background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .metric-card.danger {
+            background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .metric-card.info {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .metric-label {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-card.success .metric-label { color: #86efac; }
+        .metric-card.danger .metric-label { color: #fca5a5; }
+        .metric-card.info .metric-label { color: #93c5fd; }
+        .metric-card.primary .metric-label { color: #94a3b8; }
+
+        .metric-value {
+            font-size: 42px;
+            font-weight: 800;
+            margin: 12px 0;
+            letter-spacing: -1px;
+        }
+
+        .metric-card.success .metric-value { color: #10b981; }
+        .metric-card.danger .metric-value { color: #ef4444; }
+        .metric-card.info .metric-value { color: #3b82f6; }
+        .metric-card.primary .metric-value { color: #f1f5f9; }
+
+        .metric-subtitle {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .metric-card.success .metric-subtitle { color: #86efac; }
+        .metric-card.danger .metric-subtitle { color: #fca5a5; }
+        .metric-card.info .metric-subtitle { color: #93c5fd; }
+        .metric-card.primary .metric-subtitle { color: #64748b; }
+
+        /* Charts Section */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .chart-card {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border-radius: 18px;
+            padding: 28px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .chart-card h3 {
+            font-size: 19px;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 24px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 320px;
+        }
+
+        .chart-container-small {
+            position: relative;
+            height: 320px;
+        }
+
+        /* Regional & Category Analysis */
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        /* Feedback Lists */
+        .feedback-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .feedback-card {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border-radius: 18px;
+            padding: 28px;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .feedback-card h3 {
+            font-size: 19px;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-badge {
+            background: #7f1d1d;
+            color: #fca5a5;
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .feedback-list {
+            max-height: 350px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .feedback-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .feedback-list::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.3);
+            border-radius: 10px;
+        }
+
+        .feedback-list::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 10px;
+        }
+
+        .feedback-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.5);
+        }
+
+        .feedback-item {
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 14px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .feedback-item:hover {
+            transform: translateX(4px);
+        }
+
+        .feedback-item.critical:hover {
+            background: rgba(127, 29, 29, 0.45);
+        }
+
+        .feedback-item.recent:hover {
+            background: rgba(51, 65, 85, 0.75);
+        }
+
+        .feedback-item:focus-visible {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
+
+        .feedback-item.critical {
+            background: rgba(127, 29, 29, 0.3);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .feedback-item.recent {
+            background: rgba(51, 65, 85, 0.5);
+        }
+
+        .feedback-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .feedback-meta {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .feedback-item.critical .feedback-meta {
+            color: #fca5a5;
+        }
+
+        .feedback-item.recent .feedback-meta {
+            color: #94a3b8;
+        }
+
+        .sentiment-badge {
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sentiment-badge.positive {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .sentiment-badge.negative {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .sentiment-badge.neutral {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .feedback-text {
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .feedback-item.critical .feedback-text {
+            color: #fecaca;
+        }
+
+        .feedback-item.recent .feedback-text {
+            color: #cbd5e1;
+        }
+
+        .feedback-footer {
+            font-size: 11px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .feedback-item.critical .feedback-footer {
+            color: #fb923c;
+        }
+
+        .feedback-item.recent .feedback-footer {
+            color: #64748b;
+        }
+
+        .score-badge {
+            background: rgba(15, 23, 42, 0.6);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 700;
+        }
+
+        /* Feedback Detail Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.75);
+            backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 24px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-card {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 18px;
+            padding: 28px;
+            max-width: 720px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
+            animation: slideDown 0.3s ease;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 22px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+        }
+
+        .modal-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: rgba(15, 23, 42, 0.6);
+            color: #cbd5e1;
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+        }
+
+        .modal-section {
+            margin-bottom: 18px;
+        }
+
+        .modal-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        .modal-text {
+            font-size: 14px;
+            color: #e2e8f0;
+            line-height: 1.6;
+            overflow-wrap: anywhere;
+        }
+
+        .modal-text.quote {
+            background: rgba(15, 23, 42, 0.6);
+            border-left: 3px solid #3b82f6;
+            padding: 14px 16px;
+            border-radius: 0 8px 8px 0;
+            font-style: italic;
+            color: #cbd5e1;
+        }
+
+        .modal-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px 24px;
+            margin-bottom: 18px;
+        }
+
+        @media (max-width: 600px) {
+            .modal-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 40px;
+            padding-top: 28px;
+            border-top: 1px solid rgba(148, 163, 184, 0.2);
+            text-align: center;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .footer p {
+            margin: 8px 0;
+        }
+
+        .footer .highlight {
+            color: #93c5fd;
+            font-weight: 600;
+        }
+
+        /* Loading State */
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .charts-grid,
+            .analysis-grid,
+            .feedback-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+            }
+
+            .title-section h1 {
+                font-size: 24px;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Inline SVG icon library -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+        <defs>
+            <symbol id="i-droplet" viewBox="0 0 24 24">
+                <path d="M12 2.5c-4 5-7 8.5-7 12a7 7 0 0 0 14 0c0-3.5-3-7-7-12z" fill="currentColor"/>
+                <ellipse cx="9.5" cy="13.5" rx="1.6" ry="2.4" fill="rgba(255,255,255,0.55)"/>
+                <path d="M14.5 11.5q1 0.5 0 1" stroke="rgba(255,255,255,0.45)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+            </symbol>
+            <symbol id="i-trend" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 17l6-6 4 4 8-8M15 7h6v6"/>
+            </symbol>
+            <symbol id="i-donut" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9"/>
+                <circle cx="12" cy="12" r="3.5"/>
+                <path d="M12 3v6M21 12h-6"/>
+            </symbol>
+            <symbol id="i-map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 4L3 6v15l6-2 6 2 6-2V4l-6 2-6-2z"/>
+                <path d="M9 4v15M15 6v15"/>
+            </symbol>
+            <symbol id="i-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.5 13.5l-7 7a2 2 0 0 1-2.8 0l-7.2-7.2V4h9.3l7.7 7.7a2 2 0 0 1 0 2.8z"/>
+                <circle cx="7.5" cy="7.5" r="1.3" fill="currentColor"/>
+            </symbol>
+            <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10.3 3.9L2.4 17.6A2 2 0 0 0 4.1 20.6h15.8a2 2 0 0 0 1.7-3l-7.9-13.7a2 2 0 0 0-3.4 0z"/>
+                <path d="M12 10v4M12 17.5v.1"/>
+            </symbol>
+            <symbol id="i-note" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 4h10l5 5v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/>
+                <path d="M14 4v5h6M8 13h8M8 17h5"/>
+            </symbol>
+            <symbol id="i-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8"/>
+            </symbol>
+            <symbol id="i-cpu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="5" width="14" height="14" rx="2"/>
+                <rect x="9" y="9" width="6" height="6" stroke-width="1.5"/>
+                <path d="M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4"/>
+            </symbol>
+            <symbol id="i-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </symbol>
+        </defs>
+    </svg>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo-section">
+                <div class="logo" aria-label="CSL plasma droplet logo">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-droplet"></use></svg>
+                    <span class="logo-mark">CSL</span>
+                </div>
+                <div class="title-section">
+                    <h1>Donor Sentiment Intelligence</h1>
+                    <p>Plasma donation experience analytics, powered by Claude</p>
+                </div>
+            </div>
+            <div class="header-meta">
+                <div class="live-pill" id="livePill" title="Live analysis status">
+                    <span class="live-dot"></span>
+                    <span id="liveStatus">Live &middot; awaiting first analysis</span>
+                </div>
+                <button class="analyze-btn" onclick="toggleAnalyzer()">
+                    <svg class="icon" aria-hidden="true"><use href="#i-spark"></use></svg>
+                    <span id="analyzerBtnText">Analyse new feedback</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- AI Analyzer Panel -->
+        <div class="analyzer-panel" id="analyzerPanel">
+            <h2><svg class="icon" aria-hidden="true"><use href="#i-cpu"></use></svg> Sentiment Analyzer</h2>
+
+            <div class="form-grid form-grid-two">
+                <div class="form-group">
+                    <label>Collection Centre</label>
+                    <select id="centerSelect">
+                        <option>Brisbane Central</option>
+                        <option>Melbourne CBD</option>
+                        <option>Sydney CBD</option>
+                        <option>Perth North</option>
+                        <option>Adelaide Central</option>
+                        <option>Canberra</option>
+                        <option>Gold Coast</option>
+                        <option>Newcastle</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="categorySelect">
+                        <option>Staff Attitude</option>
+                        <option>Wait Time</option>
+                        <option>Facilities</option>
+                        <option>Compensation</option>
+                        <option>Overall Experience</option>
+                        <option>Medical Safety</option>
+                        <option>Technology</option>
+                    </select>
+                </div>
+
+                <div class="form-group full-width">
+                    <label>Donor Email</label>
+                    <input type="email" id="donorEmail" placeholder="donor@example.com" autocomplete="off" />
+                </div>
+
+                <div class="form-group full-width">
+                    <label>Donor Feedback</label>
+                    <textarea id="feedbackText" placeholder="Paste a donor comment here (e.g. &quot;Staff were professional but the wait was too long&quot;)."></textarea>
+                </div>
+            </div>
+
+            <div class="analysis-result" id="analysisResult">
+                <h3><svg class="icon" aria-hidden="true"><use href="#i-spark"></use></svg> Analysis Result</h3>
+                <div class="result-grid">
+                    <div class="result-item">
+                        <div class="result-label">Sentiment</div>
+                        <div class="result-value" id="sentimentValue">&mdash;</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">Score</div>
+                        <div class="result-value" id="scoreValue">&mdash;</div>
+                    </div>
+                    <div class="reasoning">
+                        <div class="result-label">Reasoning</div>
+                        <div class="result-value" id="reasoningText">&mdash;</div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="assign-task-btn" id="assignTaskFromAnalyzer" style="display: none;" onclick="openTaskModal('analyzer')">
+                <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                Assign Follow-Up Task
+            </button>
+
+            <button class="submit-btn" onclick="analyzeFeedback()" id="submitBtn">
+                <svg class="icon" aria-hidden="true"><use href="#i-spark"></use></svg>
+                Analyse &amp; add to dashboard
+            </button>
+        </div>
+
+        <!-- Metrics Cards -->
+        <div class="metrics-grid" id="metricsGrid">
+            <!-- Populated by JavaScript -->
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3><svg class="icon" aria-hidden="true"><use href="#i-trend"></use></svg> Sentiment trend over time</h3>
+                <div class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3><svg class="icon" aria-hidden="true"><use href="#i-donut"></use></svg> Sentiment distribution</h3>
+                <div class="chart-container-small">
+                    <canvas id="pieChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analysis Grid -->
+        <div class="analysis-grid">
+            <div class="chart-card">
+                <h3><svg class="icon" aria-hidden="true"><use href="#i-map"></use></svg> Feedback by region</h3>
+                <div class="chart-container">
+                    <canvas id="regionalChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3><svg class="icon" aria-hidden="true"><use href="#i-tag"></use></svg> Feedback by category</h3>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feedback Lists -->
+        <div class="feedback-grid">
+            <div class="feedback-card">
+                <h3>
+                    <svg class="icon" aria-hidden="true"><use href="#i-alert"></use></svg>
+                    Critical alerts
+                    <span class="alert-badge" id="alertCount">0</span>
+                </h3>
+                <div class="feedback-list" id="criticalList">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="feedback-card">
+                <h3><svg class="icon" aria-hidden="true"><use href="#i-note"></use></svg> Recent feedback</h3>
+                <div class="feedback-list" id="recentList">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>
+                Powered by <span class="highlight">Anthropic Claude</span>
+                &nbsp;&middot;&nbsp; Sentiment analysis across
+                <span class="highlight">900+ Australian collection centres</span>
+            </p>
+            <p style="font-size: 12px;">
+                Dashboard refreshes automatically as new donor feedback is analysed.
+            </p>
+        </div>
+    </div>
+
+    <!-- Feedback Detail Modal -->
+    <div class="modal-overlay" id="feedbackModal" role="dialog" aria-modal="true" aria-labelledby="modalDate">
+        <div class="modal-card" role="document">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <span class="sentiment-badge" id="modalSentiment">&mdash;</span>
+                    <span id="modalDate">&mdash;</span>
+                    <span style="color: #475569;">&middot;</span>
+                    <span id="modalId" style="font-family: ui-monospace, monospace; font-size: 12px;">&mdash;</span>
+                </div>
+                <button class="modal-close" id="modalClose" type="button" aria-label="Close detail view">&times;</button>
+            </div>
+
+            <div class="modal-section">
+                <div class="modal-label">Donor feedback</div>
+                <div class="modal-text quote" id="modalFeedback">&mdash;</div>
+            </div>
+
+            <div class="modal-grid">
+                <div class="modal-section" style="margin-bottom:0;">
+                    <div class="modal-label">Donor email</div>
+                    <div class="modal-text" id="modalEmail">&mdash;</div>
+                </div>
+                <div class="modal-section" style="margin-bottom:0;">
+                    <div class="modal-label">Sentiment score</div>
+                    <div class="modal-text" id="modalScore">&mdash;</div>
+                </div>
+                <div class="modal-section" style="margin-bottom:0;">
+                    <div class="modal-label">Collection centre</div>
+                    <div class="modal-text" id="modalCenter">&mdash;</div>
+                </div>
+                <div class="modal-section" style="margin-bottom:0;">
+                    <div class="modal-label">Region</div>
+                    <div class="modal-text" id="modalRegion">&mdash;</div>
+                </div>
+                <div class="modal-section" style="margin-bottom:0;">
+                    <div class="modal-label">Category</div>
+                    <div class="modal-text" id="modalCategory">&mdash;</div>
+                </div>
+                <div class="modal-section" style="margin-bottom:0;">
+                    <div class="modal-label">Analysed by</div>
+                    <div class="modal-text" id="modalModel">&mdash;</div>
+                </div>
+            </div>
+
+            <div class="modal-section" style="margin-bottom:0;">
+                <div class="modal-label">Claude reasoning</div>
+                <div class="modal-text" id="modalReasoning">&mdash;</div>
+            </div>
+
+            <div style="margin-top: 24px; text-align: center;">
+                <button class="assign-task-btn" onclick="openTaskModal('modal')" style="display: inline-flex;">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                    Assign Follow-Up Task
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Assignment Modal -->
+    <div class="task-modal" id="taskModal" role="dialog" aria-modal="true" aria-labelledby="taskModalTitle">
+        <div class="task-modal-content">
+            <div class="task-modal-header">
+                <h2 id="taskModalTitle">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                    </svg>
+                    Assign Follow-Up Task
+                </h2>
+                <button class="task-close-btn" onclick="closeTaskModal()" type="button" aria-label="Close task assignment">&times;</button>
+            </div>
+
+            <div class="task-info-box" id="taskFeedbackContext">
+                <h3>Feedback Context</h3>
+                <p><strong>Centre:</strong> <span id="taskInfoCenter">—</span></p>
+                <p><strong>Category:</strong> <span id="taskInfoCategory">—</span></p>
+                <p><strong>Sentiment:</strong> <span id="taskInfoSentiment">—</span></p>
+            </div>
+
+            <form id="taskForm" onsubmit="submitTask(event)">
+                <div class="task-form-group">
+                    <label for="taskType">Task Type</label>
+                    <select id="taskType" required>
+                        <option value="">Select task type...</option>
+                        <option value="escalate">Escalate to Supervisor</option>
+                        <option value="followup">Schedule Follow-up Call</option>
+                        <option value="quality">Quality Review Required</option>
+                        <option value="training">Staff Training Needed</option>
+                        <option value="facility">Facility Issue Report</option>
+                        <option value="other">Other Action Required</option>
+                    </select>
+                </div>
+
+                <div class="task-form-group">
+                    <label for="taskAssignee">Assign To</label>
+                    <select id="taskAssignee" required>
+                        <option value="">Select team member...</option>
+                        <option value="manager">Regional Manager</option>
+                        <option value="supervisor">Centre Supervisor</option>
+                        <option value="quality">Quality Team</option>
+                        <option value="training">Training Coordinator</option>
+                        <option value="facilities">Facilities Team</option>
+                        <option value="operations">Operations Lead</option>
+                    </select>
+                </div>
+
+                <div class="task-form-group">
+                    <label for="taskPriority">Priority Level</label>
+                    <select id="taskPriority" required>
+                        <option value="">Select priority...</option>
+                        <option value="urgent">🔴 Urgent - Immediate Action</option>
+                        <option value="high">🟠 High - Within 24 hours</option>
+                        <option value="medium">🟡 Medium - Within 3 days</option>
+                        <option value="low">🟢 Low - Within 1 week</option>
+                    </select>
+                </div>
+
+                <div class="task-form-group">
+                    <label for="taskDueDate">Due Date</label>
+                    <input type="date" id="taskDueDate" required>
+                </div>
+
+                <div class="task-form-group">
+                    <label for="taskNotes">Task Notes / Instructions</label>
+                    <textarea id="taskNotes" placeholder="Provide any additional context or specific actions required..." required></textarea>
+                </div>
+
+                <button type="submit" class="task-submit-btn">
+                    <svg class="icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Create Task
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Claude API config (key mirrored in .env; exposed here for browser-only demo)
+        const ANTHROPIC_API_KEY = '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';
+        const PRIMARY_MODEL = 'claude-haiku-4-5-20251001';
+        const FALLBACK_MODEL = 'claude-sonnet-4-6';
+
+        // Centre → region map. Region is derived, never asked for in the form.
+        const CENTER_TO_REGION = {
+            'Brisbane Central': 'Queensland',
+            'Melbourne CBD': 'Victoria',
+            'Sydney CBD': 'New South Wales',
+            'Perth North': 'Western Australia',
+            'Adelaide Central': 'South Australia',
+            'Canberra': 'Australian Capital Territory',
+            'Gold Coast': 'Queensland',
+            'Newcastle': 'New South Wales'
+        };
+
+        let lastAnalysisAt = null;
+
+        async function callClaudeOnce(model, body) {
+            // Retry transient errors (429, 5xx, 529 overloaded) with exponential backoff + jitter.
+            const MAX_ATTEMPTS = 4;
+            let lastErr;
+            for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+                let response;
+                try {
+                    response = await fetch('https://api.anthropic.com/v1/messages', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-key': ANTHROPIC_API_KEY,
+                            'anthropic-version': '2023-06-01',
+                            'anthropic-dangerous-direct-browser-access': 'true'
+                        },
+                        body
+                    });
+                } catch (netErr) {
+                    lastErr = netErr;
+                    if (attempt < MAX_ATTEMPTS - 1) {
+                        await new Promise(r => setTimeout(r, (2 ** attempt) * 500 + Math.random() * 300));
+                        continue;
+                    }
+                    throw netErr;
+                }
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const raw = data.content.find(b => b.type === 'text')?.text ?? '';
+                    const match = raw.match(/\{[\s\S]*\}/);
+                    const parsed = JSON.parse(match ? match[0] : raw);
+                    return {
+                        sentiment: parsed.sentiment,
+                        score: Number(parsed.score),
+                        reasoning: parsed.reasoning,
+                        model
+                    };
+                }
+
+                const retriable = response.status === 429 || response.status >= 500;
+                const errBody = await response.text();
+                lastErr = new Error(`${model} → ${response.status}: ${errBody}`);
+                if (!retriable || attempt === MAX_ATTEMPTS - 1) throw lastErr;
+
+                const retryAfter = parseFloat(response.headers.get('retry-after') || '');
+                const delayMs = !isNaN(retryAfter)
+                    ? retryAfter * 1000
+                    : (2 ** attempt) * 1000 + Math.random() * 500;
+                console.warn(`${model} ${response.status}, retry ${attempt + 1}/${MAX_ATTEMPTS - 1} in ${Math.round(delayMs)}ms`);
+                await new Promise(r => setTimeout(r, delayMs));
+            }
+            throw lastErr;
+        }
+
+        async function callClaudeAPI(text) {
+            const prompt = `Analyze the sentiment of this plasma donor feedback. Respond with ONLY a JSON object (no markdown, no other text) with exactly these fields:
+- "sentiment": one of "positive", "neutral", or "negative"
+- "score": a float from -1.0 (most negative) to +1.0 (most positive)
+- "reasoning": one concise sentence explaining the sentiment
+
+Feedback: ${JSON.stringify(text)}`;
+
+            const buildBody = (model) => JSON.stringify({
+                model,
+                max_tokens: 256,
+                messages: [{ role: 'user', content: prompt }]
+            });
+
+            try {
+                return await callClaudeOnce(PRIMARY_MODEL, buildBody(PRIMARY_MODEL));
+            } catch (primaryErr) {
+                console.warn('Haiku failed after retries, escalating to Sonnet:', primaryErr.message);
+                const result = await callClaudeOnce(FALLBACK_MODEL, buildBody(FALLBACK_MODEL));
+                result.reasoning = `[via Sonnet fallback] ${result.reasoning}`;
+                return result;
+            }
+        }
+
+        // Initial mock data
+        let feedbackData = [
+          {
+            "id": "FB001",
+            "date": "2025-11-15",
+            "center": "Brisbane Central",
+            "region": "Queensland",
+            "feedback": "The staff were incredibly friendly and made me feel comfortable during my first donation.",
+            "category": "Staff Attitude",
+            "sentiment": "positive",
+            "score": 0.92
+          },
+          {
+            "id": "FB002",
+            "date": "2025-11-18",
+            "center": "Melbourne CBD",
+            "region": "Victoria",
+            "feedback": "Waited over 90 minutes past my appointment time. Completely unacceptable.",
+            "category": "Wait Time",
+            "sentiment": "negative",
+            "score": -0.85
+          },
+          {
+            "id": "FB003",
+            "date": "2025-11-20",
+            "center": "Sydney CBD",
+            "region": "New South Wales",
+            "feedback": "The new lounge area is much more comfortable. Appreciated the refreshments.",
+            "category": "Facilities",
+            "sentiment": "positive",
+            "score": 0.78
+          },
+          {
+            "id": "FB004",
+            "date": "2025-12-05",
+            "center": "Perth North",
+            "region": "Western Australia",
+            "feedback": "Compensation payment was delayed by two weeks. Made multiple calls.",
+            "category": "Compensation",
+            "sentiment": "negative",
+            "score": -0.82
+          },
+          {
+            "id": "FB005",
+            "date": "2025-12-12",
+            "center": "Adelaide Central",
+            "region": "South Australia",
+            "feedback": "Standard experience. Nothing particularly good or bad to report.",
+            "category": "Overall Experience",
+            "sentiment": "neutral",
+            "score": 0.05
+          },
+          {
+            "id": "FB006",
+            "date": "2026-01-08",
+            "center": "Brisbane Central",
+            "region": "Queensland",
+            "feedback": "Experienced severe bruising after donation. The technician seemed inexperienced.",
+            "category": "Medical Safety",
+            "sentiment": "negative",
+            "score": -0.91
+          },
+          {
+            "id": "FB007",
+            "date": "2026-01-15",
+            "center": "Melbourne CBD",
+            "region": "Victoria",
+            "feedback": "Love the new mobile app for booking appointments. Much easier than calling.",
+            "category": "Technology",
+            "sentiment": "positive",
+            "score": 0.88
+          },
+          {
+            "id": "FB008",
+            "date": "2026-02-03",
+            "center": "Sydney CBD",
+            "region": "New South Wales",
+            "feedback": "The center was understaffed today. Staff looked stressed and rushed.",
+            "category": "Staff Attitude",
+            "sentiment": "negative",
+            "score": -0.76
+          },
+          {
+            "id": "FB009",
+            "date": "2026-02-14",
+            "center": "Canberra",
+            "region": "Australian Capital Territory",
+            "feedback": "Been donating for 5 years. Always professional service at this location.",
+            "category": "Overall Experience",
+            "sentiment": "positive",
+            "score": 0.85
+          },
+          {
+            "id": "FB010",
+            "date": "2026-03-01",
+            "center": "Gold Coast",
+            "region": "Queensland",
+            "feedback": "Parking is a nightmare. Need better parking facilities or validation.",
+            "category": "Facilities",
+            "sentiment": "negative",
+            "score": -0.68
+          },
+          {
+            "id": "FB011",
+            "date": "2026-03-15",
+            "center": "Newcastle",
+            "region": "New South Wales",
+            "feedback": "The nurse was excellent. Very gentle with the needle insertion.",
+            "category": "Staff Attitude",
+            "sentiment": "positive",
+            "score": 0.94
+          },
+          {
+            "id": "FB012",
+            "date": "2026-04-05",
+            "center": "Perth North",
+            "region": "Western Australia",
+            "feedback": "Air conditioning was broken. Very uncomfortable during donation.",
+            "category": "Facilities",
+            "sentiment": "negative",
+            "score": -0.78
+          },
+          {
+            "id": "FB013",
+            "date": "2026-04-20",
+            "center": "Adelaide Central",
+            "region": "South Australia",
+            "feedback": "Quick in and out. Very efficient service today.",
+            "category": "Wait Time",
+            "sentiment": "positive",
+            "score": 0.84
+          },
+          {
+            "id": "FB014",
+            "date": "2026-05-01",
+            "center": "Melbourne CBD",
+            "region": "Victoria",
+            "feedback": "Impressed by the professionalism of the entire team.",
+            "category": "Staff Attitude",
+            "sentiment": "positive",
+            "score": 0.92
+          },
+          {
+            "id": "FB015",
+            "date": "2026-05-10",
+            "center": "Sydney CBD",
+            "region": "New South Wales",
+            "feedback": "Mobile app keeps crashing when I try to book.",
+            "category": "Technology",
+            "sentiment": "negative",
+            "score": -0.80
+          }
+        ];
+
+        // Chart instances
+        let trendChart, pieChart, regionalChart, categoryChart;
+
+        // Toggle Analyzer Panel
+        function toggleAnalyzer() {
+            const panel = document.getElementById('analyzerPanel');
+            const btn = document.getElementById('analyzerBtnText');
+            const btnIcon = document.querySelector('.analyze-btn .icon use');
+            const isActive = panel.classList.toggle('active');
+            btn.textContent = isActive ? 'Back to dashboard' : 'Analyse new feedback';
+            if (btnIcon) btnIcon.setAttribute('href', isActive ? '#i-arrow-left' : '#i-spark');
+        }
+
+        // Live status pill — shows time since last analysis
+        function formatRelative(date) {
+            if (!date) return 'awaiting first analysis';
+            const s = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+            if (s < 60) return `${s}s ago`;
+            const m = Math.floor(s / 60);
+            if (m < 60) return `${m}m ago`;
+            const h = Math.floor(m / 60);
+            if (h < 24) return `${h}h ago`;
+            return `${Math.floor(h / 24)}d ago`;
+        }
+
+        function refreshLivePill() {
+            const status = document.getElementById('liveStatus');
+            if (!status) return;
+            status.textContent = lastAnalysisAt
+                ? `Live · last analysis ${formatRelative(lastAnalysisAt)}`
+                : 'Live · awaiting first analysis';
+        }
+        setInterval(refreshLivePill, 10_000);
+
+        // Analyze Feedback
+        async function analyzeFeedback() {
+            const feedbackText = document.getElementById('feedbackText').value.trim();
+            if (!feedbackText) {
+                alert('Please enter feedback text');
+                return;
+            }
+
+            // Hide the Assign Task button while analyzing
+            document.getElementById('assignTaskFromAnalyzer').style.display = 'none';
+
+            const submitBtn = document.getElementById('submitBtn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading"></span> Analysing with Claude…';
+
+            try {
+                const result = await callClaudeAPI(feedbackText);
+
+                // Show result
+                document.getElementById('sentimentValue').textContent = result.sentiment.toUpperCase();
+                document.getElementById('sentimentValue').className = `result-value ${result.sentiment}`;
+                document.getElementById('scoreValue').textContent = result.score.toFixed(2);
+                document.getElementById('reasoningText').textContent = result.reasoning;
+                document.getElementById('analysisResult').classList.add('active');
+
+                // Show the Assign Task button after successful analysis
+                document.getElementById('assignTaskFromAnalyzer').style.display = 'inline-flex';
+
+                // Add to feedback data — region is derived from centre, never asked for.
+                const center = document.getElementById('centerSelect').value;
+                const emailRaw = document.getElementById('donorEmail').value.trim();
+                const newEntry = {
+                    id: `FB${String(feedbackData.length + 1).padStart(3, '0')}`,
+                    date: new Date().toISOString().split('T')[0],
+                    center,
+                    region: CENTER_TO_REGION[center] || 'Unknown',
+                    email: emailRaw || null,
+                    feedback: feedbackText,
+                    category: document.getElementById('categorySelect').value,
+                    sentiment: result.sentiment,
+                    score: result.score,
+                    reasoning: result.reasoning || null,
+                    model: result.model || null
+                };
+
+                feedbackData.unshift(newEntry);
+                lastAnalysisAt = new Date();
+                refreshLivePill();
+
+                // Update dashboard
+                setTimeout(() => {
+                    updateDashboard();
+                    document.getElementById('feedbackText').value = '';
+                    document.getElementById('donorEmail').value = '';
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }, 1000);
+
+            } catch (error) {
+                console.error('Analysis error:', error);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+                alert(`Analysis failed: ${error.message || error}\n\nBoth Haiku and Sonnet are unreachable. Please try again.`);
+            }
+        }
+
+        // Calculate metrics
+        function calculateMetrics() {
+            const total = feedbackData.length;
+            const positive = feedbackData.filter(f => f.sentiment === 'positive').length;
+            const negative = feedbackData.filter(f => f.sentiment === 'negative').length;
+            const neutral = feedbackData.filter(f => f.sentiment === 'neutral').length;
+            const avgScore = total ? (feedbackData.reduce((sum, f) => sum + f.score, 0) / total).toFixed(2) : '0.00';
+            const criticalCount = feedbackData.filter(f => f.sentiment === 'negative' && f.score < -0.80).length;
+            const pct = (n) => total ? ((n / total) * 100).toFixed(1) : '0.0';
+
+            return {
+                total,
+                positive,
+                negative,
+                neutral,
+                positivePct: pct(positive),
+                negativePct: pct(negative),
+                neutralPct: pct(neutral),
+                avgScore,
+                criticalCount
+            };
+        }
+
+        // Update metrics cards
+        function updateMetrics() {
+            const metrics = calculateMetrics();
+            
+            document.getElementById('metricsGrid').innerHTML = `
+                <div class="metric-card primary">
+                    <div class="metric-label">Total Feedback</div>
+                    <div class="metric-value">${metrics.total}</div>
+                    <div class="metric-subtitle">${metrics.positive} positive · ${metrics.neutral} neutral · ${metrics.negative} negative</div>
+                </div>
+
+                <div class="metric-card success">
+                    <div class="metric-label">Positive Sentiment</div>
+                    <div class="metric-value">${metrics.positivePct}%</div>
+                    <div class="metric-subtitle">${metrics.positive} of ${metrics.total} donors satisfied</div>
+                </div>
+
+                <div class="metric-card danger">
+                    <div class="metric-label">Negative Sentiment</div>
+                    <div class="metric-value">${metrics.negativePct}%</div>
+                    <div class="metric-subtitle">${metrics.criticalCount} critical ${metrics.criticalCount === 1 ? 'alert' : 'alerts'} · ${metrics.neutralPct}% neutral</div>
+                </div>
+
+                <div class="metric-card info">
+                    <div class="metric-label">Average Sentiment</div>
+                    <div class="metric-value">${metrics.avgScore}</div>
+                    <div class="metric-subtitle">Scale: -1.0 to +1.0</div>
+                </div>
+            `;
+        }
+
+        // Process trend data
+        function processTrendData() {
+            const monthlyData = {};
+            feedbackData.forEach(item => {
+                const month = item.date.substring(0, 7);
+                if (!monthlyData[month]) {
+                    monthlyData[month] = { positive: 0, neutral: 0, negative: 0 };
+                }
+                monthlyData[month][item.sentiment]++;
+            });
+
+            const months = Object.keys(monthlyData).sort();
+            return {
+                labels: months,
+                positive: months.map(m => monthlyData[m].positive),
+                neutral: months.map(m => monthlyData[m].neutral),
+                negative: months.map(m => monthlyData[m].negative)
+            };
+        }
+
+        // Update Trend Chart
+        function updateTrendChart() {
+            const data = processTrendData();
+            
+            if (trendChart) trendChart.destroy();
+            
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            label: 'Positive',
+                            data: data.positive,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 3
+                        },
+                        {
+                            label: 'Neutral',
+                            data: data.neutral,
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 3
+                        },
+                        {
+                            label: 'Negative',
+                            data: data.negative,
+                            borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            tension: 0.4,
+                            fill: true,
+                            borderWidth: 3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#94a3b8', font: { size: 12, weight: '600' } }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update Pie Chart
+        function updatePieChart() {
+            const counts = { positive: 0, neutral: 0, negative: 0 };
+            feedbackData.forEach(item => counts[item.sentiment]++);
+            
+            if (pieChart) pieChart.destroy();
+            
+            const ctx = document.getElementById('pieChart').getContext('2d');
+            pieChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Positive', 'Neutral', 'Negative'],
+                    datasets: [{
+                        data: [counts.positive, counts.neutral, counts.negative],
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#94a3b8', font: { size: 13, weight: '600' }, padding: 15 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Process regional data
+        function processRegionalData() {
+            const regionalCount = {};
+            feedbackData.forEach(item => {
+                if (!regionalCount[item.region]) {
+                    regionalCount[item.region] = { positive: 0, neutral: 0, negative: 0 };
+                }
+                regionalCount[item.region][item.sentiment]++;
+            });
+
+            const regions = Object.keys(regionalCount).sort();
+            return {
+                labels: regions,
+                positive: regions.map(r => regionalCount[r].positive),
+                neutral: regions.map(r => regionalCount[r].neutral),
+                negative: regions.map(r => regionalCount[r].negative)
+            };
+        }
+
+        // Update Regional Chart
+        function updateRegionalChart() {
+            const data = processRegionalData();
+            
+            if (regionalChart) regionalChart.destroy();
+            
+            const ctx = document.getElementById('regionalChart').getContext('2d');
+            regionalChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            label: 'Positive',
+                            data: data.positive,
+                            backgroundColor: '#10b981'
+                        },
+                        {
+                            label: 'Neutral',
+                            data: data.neutral,
+                            backgroundColor: '#f59e0b'
+                        },
+                        {
+                            label: 'Negative',
+                            data: data.negative,
+                            backgroundColor: '#ef4444'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#94a3b8', font: { size: 12, weight: '600' } }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            stacked: true,
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                        },
+                        x: {
+                            stacked: true,
+                            ticks: { color: '#94a3b8', font: { size: 10 } },
+                            grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Process category data
+        function processCategoryData() {
+            const categoryCount = {};
+            feedbackData.forEach(item => {
+                if (!categoryCount[item.category]) {
+                    categoryCount[item.category] = { positive: 0, neutral: 0, negative: 0 };
+                }
+                categoryCount[item.category][item.sentiment]++;
+            });
+
+            const categories = Object.keys(categoryCount).sort();
+            return {
+                labels: categories,
+                positive: categories.map(c => categoryCount[c].positive),
+                neutral: categories.map(c => categoryCount[c].neutral),
+                negative: categories.map(c => categoryCount[c].negative)
+            };
+        }
+
+        // Update Category Chart
+        function updateCategoryChart() {
+            const data = processCategoryData();
+            
+            if (categoryChart) categoryChart.destroy();
+            
+            const ctx = document.getElementById('categoryChart').getContext('2d');
+            categoryChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            label: 'Positive',
+                            data: data.positive,
+                            backgroundColor: '#10b981'
+                        },
+                        {
+                            label: 'Neutral',
+                            data: data.neutral,
+                            backgroundColor: '#f59e0b'
+                        },
+                        {
+                            label: 'Negative',
+                            data: data.negative,
+                            backgroundColor: '#ef4444'
+                        }
+                    ]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#94a3b8', font: { size: 12, weight: '600' } }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            stacked: true,
+                            ticks: { color: '#94a3b8', font: { size: 11 } },
+                            grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                        },
+                        x: {
+                            stacked: true,
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update feedback lists
+        function updateFeedbackLists() {
+            // Critical alerts — list is capped for display, but badge shows the true total
+            const allCritical = feedbackData
+                .filter(f => f.sentiment === 'negative' && f.score < -0.80)
+                .sort((a, b) => a.score - b.score);
+            const criticalFeedback = allCritical.slice(0, 5);
+
+            document.getElementById('alertCount').textContent = allCritical.length > 5
+                ? `${criticalFeedback.length} of ${allCritical.length}`
+                : `${allCritical.length}`;
+            document.getElementById('criticalList').innerHTML = criticalFeedback.map(f => `
+                <div class="feedback-item critical" data-feedback-id="${f.id}" role="button" tabindex="0" aria-label="View details for ${f.id}">
+                    <div class="feedback-header">
+                        <span class="feedback-meta">${escapeHTML(f.center)} &middot; ${f.date}</span>
+                        <span class="score-badge">Score: ${f.score.toFixed(2)}</span>
+                    </div>
+                    <div class="feedback-text">${escapeHTML(f.feedback)}</div>
+                    <div class="feedback-footer">
+                        <span>Category: ${escapeHTML(f.category)}</span>
+                        <span class="sentiment-badge ${f.sentiment}">${f.sentiment}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            // Recent feedback
+            const recentFeedback = [...feedbackData]
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .slice(0, 8);
+
+            document.getElementById('recentList').innerHTML = recentFeedback.map(f => `
+                <div class="feedback-item recent" data-feedback-id="${f.id}" role="button" tabindex="0" aria-label="View details for ${f.id}">
+                    <div class="feedback-header">
+                        <span class="feedback-meta">${escapeHTML(f.center)} &middot; ${f.date}</span>
+                        <span class="sentiment-badge ${f.sentiment}">${f.sentiment}</span>
+                    </div>
+                    <div class="feedback-text">${escapeHTML(f.feedback)}</div>
+                    <div class="feedback-footer">
+                        <span>${escapeHTML(f.category)}</span>
+                        <span class="score-badge">Score: ${f.score.toFixed(2)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Tiny HTML escape for user-supplied strings in dynamic markup
+        function escapeHTML(s) {
+            return String(s ?? '').replace(/[&<>"']/g, c => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[c]));
+        }
+
+        // Modal — feedback detail view
+        function openFeedbackDetail(id) {
+            const f = feedbackData.find(x => x.id === id);
+            if (!f) return;
+            const set = (elId, val) => { document.getElementById(elId).textContent = val; };
+            const badge = document.getElementById('modalSentiment');
+            badge.textContent = f.sentiment;
+            badge.className = `sentiment-badge ${f.sentiment}`;
+            set('modalDate', f.date);
+            set('modalId', f.id);
+            set('modalFeedback', f.feedback);
+            set('modalEmail', f.email || 'Not provided');
+            set('modalScore', `${f.score >= 0 ? '+' : ''}${f.score.toFixed(2)} (scale −1.0 to +1.0)`);
+            set('modalCenter', f.center);
+            set('modalRegion', f.region);
+            set('modalCategory', f.category);
+            set('modalModel', f.model
+                ? `Claude (${f.model})`
+                : 'Legacy record — not analysed by Claude');
+            set('modalReasoning', f.reasoning || 'No reasoning available for this record.');
+            document.getElementById('feedbackModal').classList.add('active');
+        }
+
+        function closeFeedbackModal() {
+            document.getElementById('feedbackModal').classList.remove('active');
+        }
+
+        // Event delegation — single listener handles clicks on both lists, even after re-render
+        document.addEventListener('click', (e) => {
+            const item = e.target.closest('.feedback-item[data-feedback-id]');
+            if (item) {
+                openFeedbackDetail(item.dataset.feedbackId);
+                return;
+            }
+            // Close on overlay click (but not on modal content clicks)
+            if (e.target.id === 'feedbackModal' || e.target.id === 'modalClose') {
+                closeFeedbackModal();
+            }
+        });
+
+        // Keyboard support: Enter/Space activates focused item, Escape closes modal
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeFeedbackModal();
+                return;
+            }
+            if ((e.key === 'Enter' || e.key === ' ') &&
+                e.target.matches('.feedback-item[data-feedback-id]')) {
+                e.preventDefault();
+                openFeedbackDetail(e.target.dataset.feedbackId);
+            }
+        });
+
+        // Update entire dashboard
+        function updateDashboard() {
+            updateMetrics();
+            updateTrendChart();
+            updatePieChart();
+            updateRegionalChart();
+            updateCategoryChart();
+            updateFeedbackLists();
+        }
+
+        // Initialize dashboard on page load
+        window.addEventListener('load', () => {
+            updateDashboard();
+        });
+
+        // Allow Enter key in textarea to analyze
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('feedbackText').addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    analyzeFeedback();
+                }
+            });
+        });
+
+        // ========== Task Assignment Modal Functions ==========
+        
+        let currentTaskContext = null;
+
+        function openTaskModal(source) {
+            const modal = document.getElementById('taskModal');
+            
+            // Get context based on source
+            if (source === 'analyzer') {
+                // From the live analyzer form
+                const center = document.getElementById('centerSelect').value;
+                const category = document.getElementById('categorySelect').value;
+                const sentiment = document.getElementById('sentimentValue').textContent;
+                
+                currentTaskContext = {
+                    source: 'analyzer',
+                    center: center,
+                    category: category,
+                    sentiment: sentiment,
+                    feedback: document.getElementById('feedbackText').value
+                };
+            } else if (source === 'modal') {
+                // From the feedback detail modal
+                const center = document.getElementById('modalCenter').textContent;
+                const category = document.getElementById('modalCategory').textContent;
+                const sentiment = document.getElementById('modalSentiment').textContent;
+                
+                currentTaskContext = {
+                    source: 'modal',
+                    center: center,
+                    category: category,
+                    sentiment: sentiment,
+                    feedbackId: document.getElementById('modalId').textContent
+                };
+            }
+            
+            // Populate context info in task modal
+            document.getElementById('taskInfoCenter').textContent = currentTaskContext.center;
+            document.getElementById('taskInfoCategory').textContent = currentTaskContext.category;
+            document.getElementById('taskInfoSentiment').textContent = currentTaskContext.sentiment;
+            
+            // Set default due date to tomorrow
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('taskDueDate').value = tomorrow.toISOString().split('T')[0];
+            
+            // Show modal
+            modal.classList.add('active');
+        }
+
+        function closeTaskModal() {
+            const modal = document.getElementById('taskModal');
+            modal.classList.remove('active');
+            
+            // Reset form
+            document.getElementById('taskForm').reset();
+            currentTaskContext = null;
+        }
+
+        function submitTask(event) {
+            event.preventDefault();
+            
+            // Get form values
+            const taskData = {
+                type: document.getElementById('taskType').value,
+                assignee: document.getElementById('taskAssignee').value,
+                priority: document.getElementById('taskPriority').value,
+                dueDate: document.getElementById('taskDueDate').value,
+                notes: document.getElementById('taskNotes').value,
+                context: currentTaskContext
+            };
+            
+            // In a real implementation, this would send to a backend API
+            // For now, we'll just show a success message and close the modal
+            
+            console.log('Task created:', taskData);
+            
+            // Show success feedback
+            alert('✅ Task Successfully Created!\n\n' +
+                  'Task Type: ' + taskData.type + '\n' +
+                  'Assigned To: ' + taskData.assignee + '\n' +
+                  'Priority: ' + taskData.priority + '\n' +
+                  'Due: ' + taskData.dueDate + '\n\n' +
+                  'This is a demonstration. In production, this would create a ticket in your task management system.');
+            
+            // Close modal
+            closeTaskModal();
+        }
+
+        // Close task modal when clicking outside
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'taskModal') {
+                closeTaskModal();
+            }
+        });
+
+        // Close task modal with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && document.getElementById('taskModal').classList.contains('active')) {
+                closeTaskModal();
+            }
+        });
+    </script>
+</body>
+</html>
