@@ -1397,8 +1397,8 @@
     </div>
 
     <script>
-        // Claude API config (key mirrored in .env; exposed here for browser-only demo)
-        const ANTHROPIC_API_KEY = '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';
+        // Claude API config (injected at deploy time from GitHub Actions secret)
+        const ANTHROPIC_API_KEY = '__ANTHROPIC_API_KEY__';
         const PRIMARY_MODEL = 'claude-haiku-4-5-20251001';
         const FALLBACK_MODEL = 'claude-sonnet-4-6';
 
